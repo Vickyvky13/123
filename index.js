@@ -13,7 +13,7 @@ app.post('/', (req, res) => {
 
   res.json({
     version: "3.0",
-    screen": "SUCCESS",
+    screen: "SUCCESS",
     data: {}
   });
 });
