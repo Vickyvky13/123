@@ -5,8 +5,7 @@ const fs = require('fs');
 const app = express();
 app.use(express.json());
 
-const PRIVATE_KEY = fs.readFileSync('./private.pem', 'utf8');
-const PASSPHRASE = process.env.PRIVATE_KEY_PASSPHRASE || '';
+const PRIVATE_KEY = fs.readFileSync('/app/private.pem', 'utf8');
 
 function decryptRequest(body) {
   const { encrypted_aes_key, encrypted_flow_data, initial_vector } = body;
@@ -16,7 +15,6 @@ function decryptRequest(body) {
       key: PRIVATE_KEY,
       padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
       oaepHash: 'sha256',
-      passphrase: PASSPHRASE,
     },
     Buffer.from(encrypted_aes_key, 'base64')
   );
@@ -69,9 +67,9 @@ app.post('/', (req, res) => {
   try {
     const { decryptedBody, aesKey, initialVector } = decryptRequest(req.body);
 
-    console.log('Decrypted request:', JSON.stringify(decryptedBody, null, 2));
+    console.log('Decrypted:', JSON.stringify(decryptedBody, null, 2));
 
-    // Handle health check ping from Meta
+    // Health check ping from Meta
     if (decryptedBody.action === 'ping') {
       const response = encryptResponse(
         { version: '3.0', data: { status: 'active' } },
@@ -81,13 +79,9 @@ app.post('/', (req, res) => {
       return res.send(response);
     }
 
-    // Handle normal flow requests
+    // Normal flow response
     const response = encryptResponse(
-      {
-        version: '3.0',
-        screen: 'SUCCESS',
-        data: {},
-      },
+      { version: '3.0', screen: 'SUCCESS', data: {} },
       aesKey,
       initialVector
     );
